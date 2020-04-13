@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<!-- XML에서만 사용가능현 표현식을 만들어 유지보수를 쉽게 사용하는 방법 두가지 -->
+	<!-- 1) proty를 만들어 사용하는 방법 -->
+	<!-- xml에서 사용하는 property를 만들어준다. id필요없음 (여기안에서만 사용할것이기떄문) -->
+	<!-- XML내부에서 사용하기 위한 값을 저장한 프로퍼티를 생성는 클래스를 Spring Bean으로 등록 -->
+	<!--  => ${키이름} 형식으로 저장된 값을 표현 -->
+	<!-- 
+	<bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer" >
+		<property name="properties">
+			<props>
+				<prop key="driver">oracle.jdbc.driver.OracleDriver</prop>
+				<prop key="url">jdbc:oracle:thin:@localhost:1521:xe</prop>
+				<prop key="user">scott</prop>
+				<prop key="passwd">tiger</prop>
+			</props>
+		</property>
+	</bean>
+	 -->
+	 
+	 <!-- 2) 리소스 파일(properties 파일)을 제공받아 xml에서 사용하기 위한 요소를 생성 -->
+	 <!--    XML 내부에서 사용하기 위한 요소를 생성하는 클래스를 Spring Bean으로 등록 -->
+	 <!--     => ${key} 형식으로 저장된 값을 표현, ★파일의 위치를 정확히 명시★ -->
+	<bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer" >
+		<!-- 방법1_ 프로젝트에 빌드되어 있는 패키지의 리소스 파일인 경우 -->
+		<!-- <property name="locations" value="site/itwill08/dao/db.properties"/> -->
+		<!-- 방법2_ 프로젝트에 빌드되어 있지 않은 패키지의 리소스 파일인 경우 -->
+		<property name="locations" value="classpath:site/itwill08/dao/db.properties"/>
+	</bean>
+	 
+	<!-- ************************************************************************************************************************************** -->
+
+	<!-- [Apache에서 제공하는 DataSource와 Spring Framework에서 제공하는 DataSource는 필드와 메소드명은 동일하게 사용, 내부적 구조 비슷 ] -->
+	<!--  DataSource는 둘 중 하나를 선택해서 사용!!! -->
+	
+	<!-- 선택1) Apache에서 제공하는 DataSource클래스를 Spring Bean으로 등록 -->
+	<!-- 		자바에서 제공해주는 DataSource인스턴스를 상속받은 자식을 인스턴스로 등록 -->
+	<!-- 		DataSource를 사용하려면 connection이 미리만들어져야하고, 인스턴스에 필요한정보를 전달해야함 => 값을 Injection시키기 -->
+	<!-- 		밑에 정보들(4개,필수)로 connetcion이 만들어지고, connection 갯수를 지정하는것도 따로 가능 -->
+	<!-- 
+	<bean class="org.apache.commons.dbcp2.BasicDataSource" id="apacheDataSource">
+		<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"/>
+		<property name="url" value="jdbc:oracle:thin:@localhost:1521:xe"/>
+		<property name="username" value="scott"/>
+		<property name="password" value="tiger"/>
+	</bean>
+	 -->
+	<bean class="org.apache.commons.dbcp2.BasicDataSource" id="apacheDataSource">
+	 	<property name="driverClassName" value="${driver}"/>
+		<property name="url" value="${url}"/>
+		<property name="username" value="${user}"/>
+		<property name="password" value="${passwd}"/>	
+	</bean>
+	
+	<!-- 선택2) SpringFramework에서 제공해주는 DataSource 클래스를 Spring Bean으로 등록 -->
+	<!--  		 >> 없으니 라이브러리 추가(Spring jdbc 라이브러리 추가) -->
+	<!-- 	
+	<bean class="org.springframework.jdbc.datasource.DriverManagerDataSource" id="springDataSource">
+		<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"/>
+		<property name="url" value="jdbc:oracle:thin:@localhost:1521:xe"/>
+		<property name="username" value="scott"/>
+		<property name="password" value="tiger"/>
+	</bean>
+ 	-->
+	<bean class="org.springframework.jdbc.datasource.DriverManagerDataSource" id="springDataSource">
+	 	<property name="driverClassName" value="${driver}"/>
+		<property name="url" value="${url}"/>
+		<property name="username" value="${user}"/>
+		<property name="password" value="${passwd}"/>	
+	</bean>
+	
+	<!-- StudentApp.java 부분 -->
+	<!-- SutdentJdbcDAO클래스를 Spring Bean으로 등록 -->
+	<bean class="site.itwill08.dao.StudentJdbcDAO" id="studentJdbcDAO">
+		<property name="dataSource" ref="apacheDataSource"/>
+	</bean>
+	
+	<!-- StudentServiceImpl클래스를 Spring Bean으로 등록 -->
+	<bean class="site.itwill08.dao.StudentServiceImpl" id="studentService">
+		<!-- <property name="studentDAO"  ref="studentJdbcDAO"/> -->
+		<!-- <property name="studentDAO" ref="studentSpringDAO"/> -->
+		<property name="studentDAO" ref="studentSpringSupportDAO"/>
+	</bean>
+	
+	<!-- StudentSpringDAO.java 부분 -->
+	<!-- JdbcTemplate 클래스를 Spring Bean으로 등록 -->
+	<!--  => DAO클래스 작성에 필요한 기능을 템플릿 메소드로 제공하는 클래스 -->
+	<!--  => DataSource 관련 Spring Bean을 Injection처리 , ★반드시 connection이 필요★ -->
+	<bean class="org.springframework.jdbc.core.JdbcTemplate" id="jdbcTemplate">
+		<property name="dataSource" ref="springDataSource"/>
+	</bean>
+	
+	<bean class="site.itwill08.dao.StudentSpringDAO" id="studentSpringDAO">
+		<property name="jdbcTemplate" ref="jdbcTemplate"/>
+	</bean>
+	
+	<!-- JdbcDaoSupport 클래스를 상속받은 자식클래스를 Spring Bean으로 등록 -->
+	<!--  => JdbcDaoSupport 클래스의 jdbcTemplate 필드에 JdbcTemplate 관련 Spring Bean 인젝션 처리 -->
+	<bean class="site.itwill08.dao.StudentSpringSupportDAO" id="studentSpringSupportDAO">
+		<property name="jdbcTemplate" ref="jdbcTemplate"/>
+	</bean>
+	
+
+</beans>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

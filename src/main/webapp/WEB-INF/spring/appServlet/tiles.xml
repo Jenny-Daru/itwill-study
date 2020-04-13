@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Fundation/DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<!-- 템플릿 먼저 작성 => 상속관계 설정 => *이 설정된것은 맨 마지막으로 설정 -->
+<tiles-definitions>
+	<!-- definition : 템플릿 페이지를 설정하기 위한 상위 엘리먼트 -->
+	<!-- name 속성 : definition 엘리먼트의 고유값을 속성값으로 설정 
+					  => 요청처리 메소드의 반환값(ViewName)으로 사용 -->
+	<!-- template : 템플릿 페이지를 구현하기 위한 JSP 문서 경로를 속성값으로 설정
+					JSP는 WEB-INF >> view(꼭 여기 아니여도 상관없음) 
+					TilesController에서 반환하는 값이 main이라면 main이름으로 설정된 template(JSP)문서를 찾아 반환 -->	
+					
+	<!-- 반환값이 main이면 이걸로 응답해쥴게요 -->			  
+	<definition name="main" template="/WEB-INF/views/layout/template.jsp">
+		<!-- put-attribute : 템플릿 페이지를 구성하는 뷰페이지(JSP)를 설정하는 엘리먼트 -->
+		<!-- 				  name 속성 : put-attribute 엘리먼트의 고유값을 속성값으로 설정
+							 value 속성 : 뷰페이지에 대한 JSP문서 경로를 속성값으로 설정 -->
+		<put-attribute name="header" value="/WEB-INF/views/layout/header.jsp"/>
+		<put-attribute name="content" value="/WEB-INF/views/layout/main.jsp"/>
+		<put-attribute name="footer" value="/WEB-INF/views/layout/footer.jsp"/>
+	</definition>
+	
+	<!-- 새로운 템플릿 페이지 등록 -->
+	<definition name="admin" template="/WEB-INF/views/admin/template.jsp">
+		<put-attribute name="header" value="/WEB-INF/views/admin/header.jsp"/>
+		<put-attribute name="content" value="/WEB-INF/views/admin/main.jsp"/>
+	</definition>
+
+
+	<!-- extends가 순서대로 읽어들이다보니  admin/~ 가 */*로 받아버려서 main것이 실행되버림~ 
+	      순서를 위로 올려버려~~~~~~~  굳 -->
+	<!-- 템플릿 페이지를 상속받는 경우 선언 순서대로 응답 처리 -->
+	<definition name="admin/*" extends="admin">
+		<put-attribute name="content" value="/WEB-INF/views/admin/{1}.jsp"/>
+	</definition>
+	
+	<!-- name속성값을 "*"로 설정한 경우 요청처리 메소드의 모든 반환값이 "문자열"인 경우 템플릿 페이지로 응답되도록 설정 -->
+	<!-- extends속성 : 다른 definition엘리먼트의 고유값을 속성값으로 설정 
+						=> 템플릿 페이지 정보를 상속받아 사용 -->
+	<!-- 뭘로 다 요청해도 내가 다 받아줄게,근데 extends사용해서 상속받아서 사용할건데 또! 다 사용하긴 싫어~ 바꾸고 싶은건 바꿔서 사용할게 -->
+	<definition name="*" extends="main">
+		<!-- 상속받은 템플릿 페이지에 새로운 뷰페이지 정보를 설정
+			  => name 속성값이 중복될 경우 기존 뷰페이지 정보 변경 가능
+			  value 속성에는 definition 엘리먼트의 name속성값에 * 기호를 {정수값} 형식으로 반환하는 ViewName 표현 가능 -->
+			  <!-- 1 => hello_tiles가 되는거지 이게 엘리먼트의 고유값과 JSP문서의 이름이 되는거 -->
+		<put-attribute name="content" value="/WEB-INF/views/{1}.jsp"/>
+	</definition>
+	
+	
+	<!-- name속성값을 "*/*"로 설정한 경우 요청처리 메소드의 모든 반환값이 "문자열/문자열"인 경우 템플릿 페이지로 응답되도록 설정 -->
+	<definition name="*/*" extends="main">
+		<put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"/>
+	</definition>
+	
+	<definition name="*/*/*" extends="main">
+		<put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+	</definition>
+	
+	
+	
+	
+	
+</tiles-definitions>
+
+
+
+
+
+
+
+
+
+
+
+

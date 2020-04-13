@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	<!--  				=> 컨텍스트에 존재하는 모든 FrontController에서 사용하기 위한 Spring Bean을 등록하는 Bean Configuration File
+	  					    ForntController 마다 만들 필요가 없고 , 모든 FrontController가 공통적으로 사용하는 클래스들이 여기에 있는 SpringBean을 가져다 사용가능  -->
+	  					    
+	<!-- DAO 클래스 작성에 필요한 클래스를 Spring Bean으로 등록
+		(DataSource : Connection생성 
+		 SqlSessionFactory : SqlSession 달라고 부탁함 
+		 TransactionManager : SpringDAO나 JdbcDAO나 등 트랜젝션 처리 가능 , 어떤 DAO를 만들던 동일한 기능으로 트랜젝션 관리 가능 
+		 JdbcTemplate : DAO사용 근데 사용 x,마바사용 /  -->
+	
+	  					    	
+	<!-- 1. DataSource(Connection Pool인데 Java에서 제공하는 DataSource Interface를 상속받은 클래스) 관련 클래스를 Spring Bean으로 등록 -->
+	<!--    => properties File 이용하는 방법도 존재 ${}사용해서 value속성값 사용 -->
+	<!-- 	=> 모든 프론트 컨트롤러가 사용 가능함~~~~~~ -->
+	<!-- 
+	<bean class="org.springframework.jdbc.datasource.DriverManagerDataSource" id="dataSource">
+		<property name="driverClassName" value="oracle.jdbc.OracleDriver"/>
+		<property name="url" value="jdbc:oracle:thin:@localhost:1521:xe"/>
+		<property name="username" value="scott"/>
+		<property name="password" value="tiger"/>
+	</bean>
+	 -->
+	 
+	 <!-- MyBatis의 로그기록을 위해 등록 -->
+	 <!-- log4jdbc-lof4j2-jdbc4 라이브러리에서 제공되는 DriverSpy 클래스 사용 -->
+	<bean class="org.springframework.jdbc.datasource.DriverManagerDataSource" id="dataSource">
+		<!-- oracle Driver이지만 spy기능이 있는 Driver -->
+		<property name="driverClassName" value="net.sf.log4jdbc.sql.jdbcapi.DriverSpy"/>
+		<property name="url" value="jdbc:log4jdbc:oracle:thin:@localhost:1521:xe"/>
+		<property name="username" value="scott"/>
+		<property name="password" value="tiger"/>
+	</bean> 
+	
+	
+	<!-- 2. SqlSessionFactory 관련 클래스를 Spring Bean으로 등록 -->
+	<!--     => MyBaits환경설정 파일을 읽어들여야 Spring Bean이 생성됨 -->
+	<bean class="org.mybatis.spring.SqlSessionFactoryBean" id="sqlSessionFactoryBean">
+		<!-- configLocation 필드에 MyBatis 환경설정 파일 경로 인젝션 처리
+			  => Spring Container(WebApplicationContext)가  webapp 디렉토리(/)의 자원에만 접근 가능
+			  => src/main/java 또는 src/main/resources 패키지 폴더의 자원에 접근하기 위한 classpath: 접두사 필수
+			  => src의 resource에 xml이 존재하여 읽어들일 경우 앞부분에 classpath:site/itwill/xml 이라고 적으면 되는데 비권장!
+			     컨테이너가 접근하지 못하면 붙여주는거~~ -->
+		<!-- <property name="configLocation" value="/WEB-INF/spring/mybatis-config.xml"/> ★정석★ -->
+		<!-- src/main/resources에 존재 -->
+		<property name="configLocation" value="classpath:mybatis-config.xml"/>	
+		<!-- dataSoruce 필드에 DataSource 관련 Spring Bean인젝션 처리  -->
+		<property name="dataSource" ref="dataSource"/>
+		<!-- typeAliasesPackage 필드에 Typealias 기능을 제공할 패키지 경로를 인젝션 처리
+			 => 패키지를 뺀 클래스명이 Alias Name이 된다 -->
+		<property name="typeAliasesPackage" value="site.itwill10.dto"/>	
+		<!-- mapperLocations 필드(배열)에 Mapper 파일의 경로를 list 엘리먼트로 인젝션 처리 
+		      => 여기에 Mapper파일 다 등록 시켜주면 되는데 src/main/java에 만들것(xml+inter이므로) >> 컨테어너 접근못함 >> 근데 일일히 등록 구찮 >> *사용 -->	
+		<property name="mapperLocations">
+			<list>
+				<!-- * 기호를 이용하여 XML Mapper 파일 등록 -->
+				<value>classpath:site/itwill10/mapper/*.xml</value>
+			</list>
+		</property>
+	</bean>
+	
+	<!-- 3. Sqlsession관련 클래스를 Spring Bean으로 등록 -->
+	<!-- destroy-method : Spring Bean 소멸 전 호출되는 메소드를 속성값으로 설정 / Sqlsession이 소멸되기 전에 호출가능한 메소드 
+						  clearCache속성값 : SqlSession 관련 JDBC(Connection)객체를 소멸하는 메소드
+						  					 => sqlSession.close와 같은거~ PreparedStatement나 Connection 이나 ResultSet을 계속 연결되어 있음 안대니까 연결을 끊어주는거  -->
+	<bean class="org.mybatis.spring.SqlSessionTemplate" id="sqlSession" destroy-method="clearCache">
+		<!-- 생성자를 이용하여 Spring Bean생성시 SqlSessionFactory 관련 Spring Bean 인젝션
+			 => setter인젝션이 없으니 무조건!!!!!! 생성자 이용해
+			 => 얘가 SqlSession을 제공해줄거야 -->
+		<constructor-arg ref="sqlSessionFactoryBean"/>
+	</bean>
+	
+	<!-- 4/10 추가등록 -->
+	<!-- 트랜젝션 매니저 Spring Bean 등록 -->
+	<!-- DataSourceTransactionManager : TransactionManager 관련 클래스 Spring Bean으로 등록
+										★beanName은 반드시!! [transactionManager] 으로 정해져 있으므로 설정 ★ -->
+	<bean class="org.springframework.jdbc.datasource.DataSourceTransactionManager" id="transactionManager">
+		<!-- dataSource필드에 DataSource관련 Spring Bean 인젝션 처리 -->
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	
+	
+	
+	<!-- 4/10 트랜젝션 어노테이션 추가 부분 -->
+	<!-- AOP의 Aspect 기능을 구현해주는 역할 -->
+	<!-- tx:annotation-driven : @Transactional 어노테이션을 사용하여 TransactionManager관련 Spring Bean으로 트랜젝션 처리 기능을 제공하는 어노테이션  -->
+	<tx:annotation-driven/> 
+	
+
+	
+	
+	
+	
+	
+</beans>
+
+
+
+
+
+
+
+
+
+

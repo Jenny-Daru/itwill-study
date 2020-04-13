@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc https://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+		
+	<!-- 어노테이션 기반의 xml -->
+	<!-- 기본 namespace => mvc 이므로 bean은 beans를 이용해야 스키마 파일 사용 가능 -->
+
+	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+	
+	<!-- 아래 두개는 mvc 소속 -->
+	<!-- Enables the Spring MVC @Controller programming model -->
+	<!-- 4/10 트랜젝션 어노테이션 사용 부분 -->
+	<!-- annotation-driven : @Controller 어노테이션을 사용하여 컨트롤러 클래스를 작성할 수 있는 기능을 제공하는 어노테이션 -->
+	<annotation-driven />
+
+	
+	<!-- 4/7 추가 작성 => ResourceController.java -->
+	<!-- Handles HTTP GET requests for /resources/** by efficiently serving up static resources in the ${webappRoot}/resources directory -->
+	<!-- resources : Front Controller를 직접 사용하지 않고 요청에 대한 매핑처리 없이 직접 응답 처리되도록 설정하는 엘리먼트 - 리소스 파일
+					  mapping 속성 : 리소스 파일을 요청할 수 있는 URL패턴을 설정하는 속성값으로 설정
+					 location 속성 : 리소스 파일에 저장된 디렉토리 경로를 속성값으로 설정
+					 클라이언트가 [/resources/**] 로 요청하면 [/resources/] 여기서 찾아다 주께요~~ -->
+	<!-- <resources mapping="/resources/**" location="/resources/" /> -->
+	<resources mapping="/images/**" location="/resources/images/" />
+	<resources mapping="/css/**" location="/resources/css/" />
+	<resources mapping="/js/**" location="/resources/js/" />
+
+	<!-- beans가 붙으면 bean 소속 -->
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	<!-- bean : 클래스를 Spring Bean으로 등록하는 엘리먼트 -->
+	<!-- InternalResourceViewResolver : 요청처리 메소드에서 반환된 ViewName을 응답처리 하기 위한 JSP문서로 변환하여 제공하는 클래스 -->
+	<beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/" />
+		<beans:property name="suffix" value=".jsp" />
+		<beans:property name="order" value="3"/>
+	</beans:bean>
+	
+	<!-- 4/7 추가 작성 404에러 /로 요청했을시 -->
+	<!-- UrlBasedViewResolver : Spring에서 제공하는 ViewResolver를 사용하지 않고 외부에서 제공하는 ViewResolver를 사용하는 기능을 제공하는 클래스  -->
+	<beans:bean class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+		<!-- viewClass 필드에 Spring이 아닌 외부에서 제공하는 ViewResolver 클래스명을 인젝션 -->
+		<beans:property name="viewClass" value="org.springframework.web.servlet.view.tiles3.TilesView"/>
+		<!-- order필드에 ViewResolver 우선순위 관련 정수값을 인젝션 처리 
+			 => 정수값이 낮을 수록 우선순위가 높게 설정 -->
+		<beans:property name="order" value="2"/>
+	</beans:bean>
+	
+	
+	<!-- TilesConfigurer : TilesView 프로그램에서 사용할 View페이지 정보를 제공하는 xml 파일 정보를 저장한 클래스 -->
+	<!--  너 이거 반환했니?? 그래 응답해쥴게 -->
+	<beans:bean class="org.springframework.web.servlet.view.tiles3.TilesConfigurer">
+		<!-- definitions 필드에 XML 파일 경로를 배열에 저장하여 인젝션 처리 -->
+		<beans:property name="definitions">
+			<beans:list>
+				<beans:value>/WEB-INF/spring/appServlet/tiles.xml</beans:value>
+			</beans:list>
+		</beans:property>
+	</beans:bean>
+	
+	
+	<!-- 4/10 추가등록 -->
+	<!-- [ AOP 기능을 이용한 트랜젝션 처리 ] => namespace aop 추가  -->
+	<!-- 트랜젝션 매니저로부터 advice를 제공받아 사용할것 => namespace의 tx 추가 -->
+	<!-- advice : transactionManager 관련 Spring Bean에 Adviser 기능을 제공하는 엘리먼트, 등록된 트랜젝션 매니저를 불러들여 adviser(joinpoint&pointcut)를 만들어 쥼 -->
+	<!-- 		  transaction-manager 속성 : TransactionManager 관련 Spring Bean의 BeanName을 속성값으로 설정
+											  root-context.xml의 id를 꼭 잘 설정해줘야함  -->
+	<!-- attributes : Transaction처리 관련 정보를 설정하는 엘리먼트  -->
+	<!--     method : 트랜젝션 처리 메소드를 설정하는 엘리먼트 / Adviser
+				       =>         name 속성 : 메소드 패턴을 속성값으로 설정
+				       => rollback-for 속성 : ROLLBACK 명령을 실행하기 위한 예외를 속성값으로 설정
+				       =>    read-only 속성 : 읽기 전용 메소드인 경우 true를 속성값으로 설정 -->
+	<!-- add~라는 메소드가 호출될 때 예외가 발생하면 rollback처리 해주세요  -->			   
+	<!-- 
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="add*" rollback-for="Exception"/>
+			<tx:method name="erase*" rollback-for="Exception"/>
+			<tx:method name="modify*" rollback-for="Exception"/>
+			<tx:method name="get*" read-only="true"/>
+		</tx:attributes>
+	</tx:advice>
+	-->
+	
+	<!-- [ TransactionManager로 생성된 advisor를 사용하여 AOP기능을 구현 ] -->
+	<!-- 
+	<aop:config>
+		<aop:advisor advice-ref="txAdvice" pointcut="execution(* site.itwill10.service..*(..))"/>
+	</aop:config>
+	 -->
+	 
+
+	
+	<!-- Annotation을 인식 , 4/2 사용안함 -->
+	<!-- 여러개 선언가능하고, 컨테이너가 어노테이션을 읽어들여 사용가능 -->
+	<!-- <context:component-scan base-package="site.itwill.controller" /> --> 
+	<context:component-scan base-package="site.itwill10.controller"/>
+	<!-- 4/8 추가등록 StudentDAOImpl.java -->
+	<context:component-scan base-package="site.itwill10.dao"/>
+	<context:component-scan base-package="site.itwill10.service"/>
+	
+	
+	
+</beans:beans>
+
+
+
+
+
+
+
+
+
+

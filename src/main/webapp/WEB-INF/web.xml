@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee https://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+	
+	<!-- The definition of the Root Spring Container shared by all Servlets and Filters -->
+	<!-- context-param : 컨텍스트에 존재하는 모든 서블릿에게 필요한 정보를 전달하는 엘리먼트 -->
+	<!-- 여러개의 프론트 컨트롤러가 존재하는데 그 컨트롤러들이 사용하는 xml파일의 코드가 중복될 경우 하나의 파일로 따로 만들어서 가져다 사용하게 공유하는것 -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>/WEB-INF/spring/root-context.xml</param-value>
+	</context-param>
+	
+	<!-- Creates the Spring Container shared by all Servlets and Filters -->
+	<!-- listner : WAS 실행시 리스너 클래스를 인스턴스로 생성하기 위한 엘리먼트 -->
+	<!--            => 컨텍스트의 모든 자원(클래스 부터 웹어플리케이션까지 포함)에게 인스턴스를 제공하기 위한 목적 -->
+	<listener>
+		<!-- 즉 WAS실행시 contextInitialized()메소드가 호출되어 모든 Spring Bean이 생성됨!! -->
+		<!-- listner-class : Listner 클래스를 설정하기 위한 엘리먼트 -->
+		<!-- 				 ★ Listner클래스 : ServletContextListner 인터페이스를 상속받아 작성된 클래스 -->
+		<!-- 					 				 => contextInitialized() 메소드 : Listner 클래스로 인스턴스 생성 후 호출(자동)되는 메소드 >> 초기화 메소드
+																					여기서 ContextLoaderListener얘가 실행되는데 얘가 컨테이너를 만들어쥬고
+																					특정 xml을 읽어들인다~~ context-param의 xml파일을 처음으로 읽어요 
+											     => contextDestoryed() 메소드 : Listner 클래스로 인스턴스 소멸 전 호출(자동)되는 메소드 >> 마무리 작업 -->
+											     
+		<!-- ContextLoaderListener 클래스를 인스턴스로 만들어서 메소드 호출해주세요. -->
+		<!-- ♥ContextLoaderListener 클래스
+		        : WebApplicationContext 인스턴스(Spring Container)를 생성하여 만들어진 Spring Bean을 컨텍스트의 모든 자원이 사용가능 하도록 제공
+				  Application => 부모, WebApplication => 자식, web에서만 사용
+				  context-param 엘리먼트에서 설정한 Bean Configuration File을 읽어 Spring Bean 등록 => 컨텍스트의 모든 자원에서 사용 가능 -->
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	
+	<!-- 4/2 추가 -->
+	<!-- Filter 클래스를 등록하여 클라이언트 모든 요청에 대해 동작되도록 설정 -->
+	<!-- Filter 클래스 : 요청 전 또는 응답 후 처리될 명령을 설정하는 클래스, 요청정보와 응답정보를 변경하고자 할경우 사용 -->
+	<!-- CharacterEncodingFilter 클래스 : 요청처리 전 HttpServletRequest 인스턴스의 캐릭터셋을 변경하는 클래스 -->
+	<filter>
+		<filter-name>encodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>encodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+
+	<!-- 4/1 추가 -->
+	<!-- Servlet 등록 -->
+	<servlet>
+		<servlet-name>mvcServlet</servlet-name>
+		<servlet-class>site.itwill09.mvc.DispatcherServlet</servlet-class>
+		<!-- load-on-startup : 원래는 사용자가 요청이 있어야만 인스턴스가 만들어 지지만
+								이게 있으면 WAS가 Start될때 미리 인스턴스 생성해쥼 => 이것이 있어야만 한다. -->
+		<load-on-startup>0</load-on-startup>
+	</servlet>
+	
+	<!-- 사용자가 *.itwill로 요청하면 mvcServlet가 동작될거에요. -->
+	<servlet-mapping>
+		<servlet-name> mvcServlet</servlet-name>
+		<url-pattern>*.itwill</url-pattern>
+	</servlet-mapping>
+	
+	
+	
+	
+	<!-- 어플리케이션의 요청을 처리 -->
+	<!-- Spring Framework Web라이브러리가 만들어준것 => 이게 프론트 컨트롤러 -->
+	<!--  이제 우리가 프론트 컨트롤러 안만드러두됨~~~ -->
+	<!-- DispatcherServlet 클래스가 객체화(인스턴스)될 때 web어플리케이션 컨텍스트가 만드러져있고 얘가 xml을 읽어 Spring Bean으로 만들어 사용가능하게 해쥼 -->
+	
+	<!-- Spring Framework에서 제공하는 Front Controller 클래스(DispatcherServlet)로 서블릿 등록 -->
+	<!--  => Front Controller 역할의 서블릿을 여러개 등록 가능
+		  => Front Controller 요청에 대한 URL 패턴을 다르게 설정 -->
+	<servlet>
+		<servlet-name>springMvcServlet</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<!-- init-param : 서블릿 클래스에 필요한 정보를 제공하기 위한 엘리먼트 -->
+		<!-- 			  DispatcherServlet 클래스에게 Bean Configuration File 제공 -->
+		<!-- 			   => 서블릿관련 클래스에서만 사용가능한 Spring Bean 등록 (WebApplication컨텍스트가 두번째로 읽어들임)
+						  bean Configuration File을 여러개 설정 가능
+						   => 파일을 엔터 또는 ,또는 ;로 구분하여 설정 
+						   => Annotation 기반의 Bean Configuration File은 하나만 설정 가능 >> 여러개 만들어도 말짱 도루묵... -->
+		<!-- DispatcherServlet클래스가 가져다 사용, 서블릿관련 클래스만 사용가능하도록 제한을 두는거 -->
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>
+				/WEB-INF/spring/springMvcServlet/spring-context1.xml
+				/WEB-INF/spring/springMvcServlet/spring-context2.xml
+			</param-value>
+		</init-param>
+		<!-- WAS 실행시 자동 인스턴스 -->
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	
+	<servlet-mapping>
+		<servlet-name>springMvcServlet</servlet-name>
+		<!-- /는 모든요청을 의미 -->
+		<url-pattern>*.do</url-pattern>
+	</servlet-mapping>
+	
+		
+	<!-- Processes application requests -->
+	<servlet>
+		<servlet-name>appServlet</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<!-- Annotation 기반의 Bean Configuration File >> 더 만들어도 소용없움 -->
+			<!-- 어노테이션 기반의 xml -->
+			<param-value>/WEB-INF/spring/appServlet/servlet-context.xml</param-value>
+		</init-param>
+		<!-- WAS 실행시 자동 인스턴스 -->
+		<load-on-startup>2</load-on-startup>
+	</servlet>
+	
+	<servlet-mapping>
+		<servlet-name>appServlet</servlet-name>
+		<!-- /는 모든요청에 대한 서블릿 처리를 의미 -->
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+
+</web-app>
+
+
+
+

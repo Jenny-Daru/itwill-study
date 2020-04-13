@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+	
+	<!-- context:component-scan :  -->
+	<!-- 이 패키지 안에있는 모든 어노테이션을 검색하여 Spring Container가 동작 시켜쥼, ★어노테이션 사용한다면 이것을 권장★ -->
+	<!-- 우리가 만든 클래스가 어노테이션 사용하고, 다른 개발자가 만든 클래스는 어노테이션 사용하면 안댐!!! -->
+	<!-- Spirng Container가 어노테이션을 인지할수 있또록 등록시켜쥬는거 -->
+	<context:component-scan base-package="site.itwill05.di"/>
+
+</beans>

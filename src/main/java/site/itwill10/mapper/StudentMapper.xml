@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="site.itwill10.mapper.StudentMapper">
+	<!-- parameterType 속성 생략 가능 / parameterType은 interfaceMapper를 통해 제공받으니 생략 가능 -->
+	<insert id="insertStudent">
+		<!-- Student에 있는 필드값을 작성 -->
+		INSERT INTO STUDENT VALUES(#{no}, #{name}, #{phone}, #{address}, #{birthday})
+	</insert>
+	
+	<!-- resultMap 사용 가능 이유 => Alias 설정해놨기 때문에 간단히 사용 -->
+	<!-- select 결과를 JavaType으로 달라고 설정 하는것  -->
+	<select id="selectStudentList" resultType="Student">
+		SELECT * FROM STUDENT ORDER BY NO
+	</select>
+</mapper>
