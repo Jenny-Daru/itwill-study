@@ -6,7 +6,7 @@
 		select * from rest_member 
 	</select>
 	
-		<select id="selectRestMemberListJSON" resultType="RestMemberJSON">
+	<select id="selectRestMemberListJSON" resultType="RestMemberJSON">
 		select * from rest_member 
 	</select>
 </mapper>

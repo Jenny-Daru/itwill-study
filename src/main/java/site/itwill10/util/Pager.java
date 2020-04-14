@@ -5,35 +5,23 @@ public class Pager {
 	
 //	[ 생성자를 이용하여 외부값을 전달받아 초기값 저장 ] 
 	
-//	검색페이지 번호 저장
-	private int pageNum;
-	
-//	검색 게시글의 갯수를 저장 
-	private int totalBoard;
-	
-//	하나의 페이지에 출력될 게시글의 갯수를 저장 
-	private int pageSize;
-	
-//	하나의 페이지 블럭에 출력될 페이지의 갯수 
-	private int blockSize;
+	private int pageNum;         // 검색페이지 번호 저장
+	private int totalBoard;      //	검색 게시글의 갯수를 저장
+	private int pageSize;		//	하나의 페이지에 출력될 게시글의 갯수를 저장 
+	private int blockSize;		//	하나의 페이지 블럭에 출력될 페이지의 갯수 
 	
 	
 //	[ 생성자로 전달받은 값을 연산하여 저장 ]
-//	전체 페이지 갯수
-	private int totalPage;
-//	현재 페이지에 출력될 게시글의 시작 행번호
-	private int startRow;
-//	현재 페이지에 출력될 게시글의 종료 행번호
-	private int endRow;
+//	 => 게시글에 대한 페이지처리
+	private int totalPage;		//	전체 페이지 갯수
+	private int startRow;		//	현재 페이지에 출력될 게시글의 시작 행번호
+	private int endRow;			//	현재 페이지에 출력될 게시글의 종료 행번호
 	
-//	현재 페이지 블럭에 출력될 시작페이지 번호
-	private int startPage;
-//	현재 페이지 블럭에 출력될 종료페이지 번호
-	private int endPage;
-//	이전 페이지 블럭에 출력될 시작 페이지 번호
-	private int prevPage;
-//	다음 페이지 블럭에 출력될 시작 페이지 번호
-	private int nextPage;
+//	=> 페이지에 대한 페이징처리 
+	private int startPage;		//	현재 페이지 블럭에 출력될 시작페이지 번호
+	private int endPage;		//	현재 페이지 블럭에 출력될 종료페이지 번호
+	private int prevPage;		//	이전 페이지 블럭에 출력될 시작 페이지 번호
+	private int nextPage;		//	다음 페이지 블럭에 출력될 시작 페이지 번호
 	
 
 	public Pager(int pageNum, int totalBoard, int pageSize, int blockSize) {
@@ -62,7 +50,7 @@ public class Pager {
 		}
 		
 		startPage=(pageNum-1)/blockSize*blockSize+1;
-		endPage=startPage+blockSize;
+		endPage=startPage+blockSize-1;
 		if(endPage>totalPage) {
 			endPage=totalPage;
 		}

@@ -89,7 +89,7 @@ public class RestFulController {
 
 //	 이것은 가능!!! String으로 반환하니까~~~~~
 	/*
-	@RequestMapping("/Xml_member")
+	@RequestMapping("/xml_member")
 	@ResponseBody
 	public String restMemberXML() {
 		return restMemberService.getRestMemberListXML().get(0).getId();
@@ -98,7 +98,7 @@ public class RestFulController {
 	
 //	[ Java 객체를 XML 형식의 문자열로 응답하는 메소드 ]
 //	 => [위의 방법1)]반환되는 클래스 자료형에서 JAXB(Java Architecture form XML Binding) 기능 이용하여 변환처리 => RestMemberXML.java 고고!!
-	@RequestMapping("/Xml_member")
+	@RequestMapping("/xml_member")
 	@ResponseBody
 	public RestMemberXML restMemberXML() {
 //		회원정보 목록이있다면 그중에 0번째 요소의 RestMemberXML의 객체(회원정보)를 반환해줄게요!
@@ -118,7 +118,7 @@ public class RestFulController {
 	
 //	해결 방법 1) 회원정보를 저장하는 List필드가 선언된 클래스 필요
 //	클라이언트 요청에 대한 회원정보를 XML텍스트 데이터로 응답하는 요청처리 메소드
-	@RequestMapping("/Xml_list")
+	@RequestMapping("/xml_list")
 	@ResponseBody
 	public RestMemberListXML restMemberListXML() {
 //		
@@ -126,9 +126,9 @@ public class RestFulController {
 		listXML.setRestMemberList(restMemberService.getRestMemberListXML());
 		return listXML;
 	}	
-	
+
 //	@ResponseBody를 사용하지 않음 => JSP가 응답(display_xml.jsp)
-//	회원목록을 AJAX 기능으로 요청하여 응답처리하는 메소드
+//	회원목록을 AJAX 기능으로 요청하여 XML로 응답받아 출력하는 요청처리 메소드
 	@RequestMapping("/xml_print")
 	public String displayXML() {
 		return "rest/display_xml";
