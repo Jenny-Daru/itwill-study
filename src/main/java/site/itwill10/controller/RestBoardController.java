@@ -24,6 +24,12 @@ import site.itwill10.util.Pager;
 // AJAX 요청에 의해 호출되는 요청처리 메소드의 method 속성값 : RequestMethod(Enum)의 상수필드(요청방식) 
 // => GET(검색기능구현), POST(저장기능구현), PUT(전체 변경), PATCH(부분변경), DELETE(삭제) 등 
 @Controller
+//@RestController
+// : 모든 요청처리 메소드의 반환값으로 응답되도록 설정하는 어노테이션 
+//   => 요청처리 메소드에서 @ResponseBody 어노테이션을 사용하지 않아도 메소드 반환값으로 응답처리 
+//   => Restful 기능을 제공하는 컨트롤러 클래스를 작성할 경우 사용(스마트 기기에서 필요한 값을 저장 변경 삭제하는 컨트롤러가 존재 할 경우 많이 사용)
+//      요청처리 메소드가 무조건 응답을 ResponseBody로 함!! 즉, 요청처리 메소드에 @ResponseBody를 사용하지 않아도됨.
+//@RestController
 public class RestBoardController {
 	
 	@Autowired

@@ -33,6 +33,7 @@
 	<resources mapping="/images/**" location="/resources/images/" />
 	<resources mapping="/css/**" location="/resources/css/" />
 	<resources mapping="/js/**" location="/resources/js/" />
+	<resources mapping="/upload/**" location="/resources/upload/" />
 
 	<!-- beans가 붙으면 bean 소속 -->
 	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
@@ -96,6 +97,17 @@
 		<aop:advisor advice-ref="txAdvice" pointcut="execution(* site.itwill10.service..*(..))"/>
 	</aop:config>
 	 -->
+	 
+	<!-- 4/16 추가 --> 
+	<!-- 업로드 500에러 해결을 위한 업로드 기능을 제공하는 클래스 -->
+	<!-- 파일 업로드 기능을 제공하는 클래스를 Spring Bean으로 등록 --> 
+	<!-- 요청처리 메소드에서 transferTo를 통해 인젝션을하여 가져다 사용해야하므로 반드시 ★multipartResolver★ 설정 -->
+	<beans:bean class="org.springframework.web.multipart.commons.CommonsMultipartResolver" id="multipartResolver">
+		<!-- maxUploadSize 필드에 업로드 파일의 용량 제한값(단위:BYTE)을 인젝션 처리 / 20971520 - 20MB -->
+		<beans:property name="maxUploadSize" value="20971520"></beans:property>
+		<!-- defaultEncoding : 입력값에 대한 캐릭터셋의 인코딩 인젝션 처리 -->
+		<beans:property name="defaultEncoding" value="UTF-8"></beans:property>
+	</beans:bean>
 	 
 
 	
