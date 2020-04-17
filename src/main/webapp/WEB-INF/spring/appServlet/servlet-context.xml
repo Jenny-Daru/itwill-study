@@ -67,6 +67,19 @@
 		</beans:property>
 	</beans:bean>
 	
+	<!-- 4/17 추가 등록 FileController클래스 fileDownload메소드 작성 중 -->
+	<!-- BeanNameViewResolver 
+	      : 요청처리 메소드에서 BeanName을 제공받아 해당 Spring Bean의 메소를 호출하여 실행하는 기능을 제공하는 VeiwResolver -->
+	<!--    => JSP를 이용한 응답이 아닌 명령 실행을 목적으로 하는 ViewResolver
+	 		=> 출력이 목적인 ViewResolver 보다 우선순위가 높도록 설정 -->
+	<beans:bean class="org.springframework.web.servlet.view.BeanNameViewResolver">
+		<beans:property name="order" value="1"/>
+	</beans:bean>
+
+	<!-- 4/17 추가 -->
+	<!-- 파일 다운로드 기능을 제공하는 클래스를 Spring Bean으로 등록 => 클래스는 내가 만드렀지 -->
+	<!--  => 요청처리 메소드에서 제공되는 beanName으로 설정 -->
+	<beans:bean class="site.itwill10.util.FileDownload" id="fileDownload"/>
 	
 	<!-- 4/10 추가등록 -->
 	<!-- [ AOP 기능을 이용한 트랜젝션 처리 ] => namespace aop 추가  -->
@@ -108,6 +121,7 @@
 		<!-- defaultEncoding : 입력값에 대한 캐릭터셋의 인코딩 인젝션 처리 -->
 		<beans:property name="defaultEncoding" value="UTF-8"></beans:property>
 	</beans:bean>
+	
 	 
 
 	

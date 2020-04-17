@@ -3,6 +3,8 @@ package site.itwill10.controller;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 
@@ -14,11 +16,13 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 
 import site.itwill10.dto.FileBoard;
 import site.itwill10.service.FileBoardService;
@@ -240,6 +244,54 @@ public class FileController implements ApplicationContextAware {
 		return "file/file_list";
 	}
 	
+	
+//	4/17 시작 등록
+	@RequestMapping("/file_delete/{num}")
+	public String fileDelete(@PathVariable int num) {
+//		서버에 저장된 파일을 삭제처리 하기위해 실제 업로드된 파일이 필요  
+		FileBoard fileBoard=fileBoardService.getFileBoard(num);
+		String uploadDirPath=context.getServletContext().getRealPath("/WEB-INF/upload");
+
+//		서버에 저장된 File을 이용하여 File 인스턴스 생성 후 delete() 메소드 호출 => 파일 삭제
+		new File(uploadDirPath, fileBoard.getUpload()).delete();
+
+//		FILE_BOARD 테이블에 저장된 게시글 삭제 
+		fileBoardService.removeFileBoard(num);
+		
+		return "redirect:/file_list";
+	}
+	
+	
+	@RequestMapping("/file_download/{num}")
+	public ModelAndView fileDownload(@PathVariable int num) {
+//		게시글번호를 전달받아 파일에 대한 정보(origin, upload파일 둘다 있음)
+		FileBoard fileBoard=fileBoardService.getFileBoard(num);
+		
+//		origin과 upload파일 둘다 가져오기위해 Map이용(여러개니까~)
+//		다운로드 파일 정보를 저장하기 위한 Map 인스턴스 생성
+		Map<String, String> fileInfo=new HashMap<String, String>();
+		
+//		Map에 어떤 디렉토리에 있는 파일을 다운로드 받아야하는지 업로드 디렉토리에 저장
+//		fileInfo 컬렉션 객체에 엔트리 3개 저장 (업로드 위치/업로드파일명/원조파일명)
+		fileInfo.put("uploadDirPath", context.getServletContext().getRealPath("/WEB-INF/upload"));
+		fileInfo.put("uploadFilename", fileBoard.getUpload());  
+		fileInfo.put("originFilename", fileBoard.getOrigin());
+		
+		
+//		JSP문서가 아닌 viewName을 이용하여 Spring Bean을 동작시키기 위해 ModelAndView 설정
+//		JSP가 아닌 클래스의 메소드가 실행!!=> 이렇게 사용하기 위해서는 ViewResolver가 바껴야 한다~ 
+		
+//		ModelAndView(String viewName, String modelName, Map<String,?> model) 생성자로 인스턴스
+//		 => ModelAndView 인스턴스에 저장되는 viewName은 Spring Bean의 BeanName을 반환(설정)  
+//		 => 특정 기능을 제공하는 Spring Bean의 메소드를 호출하여 실행
+//		 => BeanNameViewResolver 클래스를 이용하여 응답 처리되도록 설정 - servelet-context.xml 내가 사용하고자 하는 ViewResolver
+		
+//		"fileDownload"  >> Spring Bean의 BeanName 
+//		ModelAndView 인스턴스에 다운로드 기능을 제공하는 Spring Bean을 저장
+//		 => Spring Bean에게 다운로드 하고자 하는 파일정보 제공 ("fileDownload" Spring Bean을 이용할건데 "downloadFile"이라는 이름으로 fileInfo를 저장해줄거에요.)
+//		 => fileDownload의 Spring Bean을 등록하려면 클래스가 존재해야하므로 클래스먼저 생성 후 Spring Bean으로 등록해야함!!!
+		return new ModelAndView("fileDownload", "downloadFile", fileInfo);
+	}
 	
 	
 }

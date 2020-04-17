@@ -320,6 +320,15 @@
 		</dependency>
 		
 		
+		<!-- 4/17 Userinfo추가 -->
+		<!-- https://mvnrepository.com/artifact/org.mindrot/jbcrypt -->
+		<!--  => 암호화 처리 기능을 제공하는 라이브러리 / Spring에서 제공하는 SpringSercurity도 사용 가능   -->
+		<dependency>
+		    <groupId>org.mindrot</groupId>
+		    <artifactId>jbcrypt</artifactId>
+		    <version>0.4</version>
+		</dependency>
+
 		
 	</dependencies>
 	
