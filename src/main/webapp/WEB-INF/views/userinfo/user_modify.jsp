@@ -5,8 +5,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%-- ViewModel 에서 저장된 회원정보를 입력태그를 이용하여 클라이언트에게 전달하는 JSP 문서 --%>
 <%-- => 관리자 또는 수정 사용자가 로그인 사용자인 경우에만 접근 가능하도록 => 모델에서 이미해줬으므로 안해도 상관없음 --%>
-<%-- => [수정]을 클릭한 경우 회원정보 변경 처리페이지(modify.do) 요청 --%>
-<%-- => [목록]을 클릭한 경우 회원목록 출력페이지(list.do) 요청 --%>
+<%-- => [수정]을 클릭한 경우 회원정보 변경 처리페이지(/userinfo/modify) POST요청 --%>
+<%-- => [목록]을 클릭한 경우 회원목록 출력페이지(/userinfo/list) GET요청 --%>
 <%-- reuqest에 저장된 회원정보를 반환받아 출력 --%>
 <%--
 <%
@@ -18,10 +18,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title>MVC</title>
+<title>Spring</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <%-- <link rel=stylesheet href="<%=request.getContextPath() %>/model_two/css/user.css" type="text/css"> --%>
-<link rel=stylesheet href="${pageContext.request.contextPath }/model_two/css/user.css" type="text/css">
+<link rel=stylesheet href="${pageContext.request.contextPath }/css/user.css" type="text/css">
 <script language="JavaScript">
 function userModify() {
 	if ( f.name.value == "" ) {
@@ -29,7 +29,7 @@ function userModify() {
 		f.name.focus();
 		return false;
 	}
-	f.action = "modify.do";
+	f.action = "${pageContext.request.contextPath }/userinfo/modify";
 	f.submit();
 }
 </script>
@@ -87,7 +87,7 @@ function userModify() {
 		  <tr>
 			<td align=center>
 			<input type="button" value="수정" onClick="userModify();">
-			<input type="button" value="목록" onClick="location.href='list.do';">
+			<input type="button" value="목록" onClick="location.href='${pageContext.request.contextPath }/userinfo/list';">
 			</td>
 		  </tr>
 	  </table>

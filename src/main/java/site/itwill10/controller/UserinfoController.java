@@ -1,5 +1,6 @@
 package site.itwill10.controller;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import site.itwill10.dto.Userinfo;
 import site.itwill10.exception.LoginAuthFailException;
@@ -23,8 +25,10 @@ public class UserinfoController {
 	
 	@Autowired
 	private UserinfoService userinfoService;
-	
+
+/*	
 //	관리자가 페이지를 요청한 경우에만 요청메소드의 명령이 실행되도록 권한 설정
+//	 => 로그인 상태의 사용자가 아닌 경우 또는 관리자가 아닌 경우 인위적 예외 발생하여 에러페이지 응답
 //	 => 이 메소드를 요청한 클라이언트가 관리자인지 아닌지 확인해야함
 	@RequestMapping(value = "/join", method = RequestMethod.GET)
 	public String join(HttpSession session) {
@@ -32,8 +36,23 @@ public class UserinfoController {
 		Userinfo loginUserinfo=(Userinfo)session.getAttribute("loginUserinfo");
 //		로그인 사용자가 아니거나 관리자가 아니라면
 		if(loginUserinfo==null || loginUserinfo.getStatus()!=9) {
-			return "userinfo/user_error";
+			//return "userinfo/user_error";
+//			인위적 예외 발생 - 예외처리 메소드가 존재하는 경우 , 기록까지 해줌 굳 
+			throw new RuntimeException();      
 		}
+		return "userinfo/user_write";
+	}
+*/
+
+//	4/20 AdminAuthInterceptor.java 사용하려고 다시 작성
+//	인터셉터를 이용하여 관리자가 아닌 사용자가 요청한 경우 요청처리 메소드가 호출되지 않도록 설정
+//	인터셉터(Interceptor) : FrontController에 의해 요청처리 메소드 호출 전 필요한 명령을 실행하는 기능 => ★ 권한 처리시 많이 사용 ★
+//							일종의 AOP 이므로 BeanConfiguration에서 기능 구현해야함 => 인터셉터를 사용하려면 클래스가 필요 util 패키지에 클래스 생성 => servlet-context.xml
+	
+//	                         => 필터는 컨트롤러와 별개로 클라이언트에게 응답되기전에 값을 변경하거나 처리해쥬고
+//	 							인터셉터는 프론트컨트롤러 내부에 존재하여 요청처리메소드 실행전 걸러주는 역할 , 방패막 같은거 
+	@RequestMapping(value = "/join", method = RequestMethod.GET)
+	public String join() {
 		return "userinfo/user_write";
 	}
 	
@@ -94,6 +113,89 @@ public class UserinfoController {
 		return "redirect:/userinfo/login";
 	}
 	
+//	4/20 시작 추가등록
+//	로그인 상태의 사용자가 요청할 경우에만 요청메소드의 명령이 실행되도록 설정
+	/*
+	@RequestMapping(value = "/list")
+	public String list(Model model, HttpSession session, HttpServletRequest request) {
+//		로그인 상태의 사용자가 아닌 경우 인위적 예외 발생 - 에러페이지 응답
+		//if(session.getAttribute("loginUserinfo")==null) {
+//			throw new RuntimeException();
+//		}
+		
+//		로그인 상태의 사용자가 아닌 경우 - 로그인 입력페이지 재요청
+//		 => 로그인 성공 후 기존 요청페이지로 응답되도록 설정  ================> 모든 view페이지에서 사용해야하므로 인터셉터 클래스 생성 
+		if(session.getAttribute("loginUserinfo")==null) {
+			String url=request.getRequestURI().substring(request.getContextPath().length());
+			String query=request.getQueryString();
+			if(query==null) {
+				query="";
+			} else {
+				query="?"+query;
+			}
+			
+			if(request.getMethod().equals("GET")) {
+				session.setAttribute("destURI", url+query);
+			}
+			return "redirect:/userinfo/login";
+		}
+		
+		model.addAttribute("userinfoList", userinfoService.getUserinfoList());
+		
+		return "userinfo/user_list";
+	}
+	*/
+	
+//	인터셉터클래스 LoginAuthInterceptor.java 작성 후 다시 재작성
+//	인터셉터를 이용하여 로그인 사용자가 아닌 경우 요청처리 메소드가 호출되도록 설정
+	@RequestMapping(value = "/list")
+	public String list(Model model) {
+		model.addAttribute("userinfoList", userinfoService.getUserinfoList());
+		return "userinfo/user_list";
+	}
+	
+	
+//	인터셉터를 이용하여 로그인 사용자가 아닌 경우 요청처리 메소드가 호출되도록 설정
+	@RequestMapping(value = "/view")
+	public String view(@RequestParam String userid, Model model) throws UserinfoNotFoundException {
+		model.addAttribute("userinfo", userinfoService.getUserinfo(userid));
+		return "userinfo/user_view";
+	}
+	
+	
+//	인터셉터를 이용하여 로그인 사용자가 아닌 경우 요청처리 메소드가 호출되도록 설정
+	@RequestMapping(value = "/modify", method = RequestMethod.GET)
+	public String modify(@RequestParam String userid, Model model, HttpSession session) throws UserinfoNotFoundException {
+		Userinfo loginUserinfo=(Userinfo)session.getAttribute("loginUserinfo");
+//		관리자가 아니고 로그인사용자가 현재 변경사용자가 아닐 경우
+//		인터셉터 이용 권장 
+		if(loginUserinfo.getStatus()!=9 && !loginUserinfo.getUserid().equals(userid)) {
+			return "userinfo/user_error";
+		}
+		model.addAttribute("userinfo", userinfoService.getUserinfo(userid));
+		return "userinfo/user_modify";
+	}
+	
+	@RequestMapping(value = "/modify", method = RequestMethod.POST)
+	public String modify(@ModelAttribute Userinfo userinfo, HttpSession session) throws UserinfoNotFoundException {
+		userinfoService.modifyUserinfo(userinfo);
+//		인증정보 변경
+		session.setAttribute("loginUserinfo", userinfo);
+		return "redirect/userinfo/view?userid="+userinfo.getUserid();
+	}
+	
+	@RequestMapping("/remove")
+	public String remove(@RequestParam String userid, HttpSession session) throws UserinfoNotFoundException {
+		userinfoService.removeUserinfo(userid);
+		Userinfo loginUserinfo=(Userinfo)session.getAttribute("loginUserinfo");
+		if(loginUserinfo.getUserid().equals(userid)) {
+			return "redirect:/userinfo/logout";
+		} else {
+			return "redirect:/userinfo/list";
+		}
+			
+	}
+	
 	
 //	@ExceptionHandler 
 //	 : Controller 클래스의 요청처리 메소드에서 예외가 발생된 경우 예외를 처리하기 위한 메소드를 설정하기 위한 어노테이션
@@ -118,14 +220,14 @@ public class UserinfoController {
 	@ExceptionHandler(UserinfoNotFoundException.class)
 	public String execeptionHandelr(UserinfoNotFoundException exception, Model model) {
 		model.addAttribute("message", exception.getMessage());
-		return "userinfo/user_login";
+		return "userinfo/user_error";
 	}
 	*/
 	
 	
 	/*
-	
-	예외처리 컨트롤러를 따로 만들어서 사용
+	모든 컨트롤러에서 발생할 수 있는 예외 이므로 
+	 => 예외처리 컨트롤러를 따로 만들어서 사용
 	@ExceptionHandler(Exception.class)
 	public String execeptionHandelr(Exception exception) {
 		exception.printStackTrace();
